@@ -67,7 +67,6 @@ def main():
     st.write('\n')
 
     if st.session_state["authentication_status"]:
-
         menu()
         
 

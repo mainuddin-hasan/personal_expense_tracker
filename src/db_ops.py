@@ -8,7 +8,7 @@ from utility import show_pdf
 
 def show_data(df,columns):
     with st.expander("**Show** all Expenses"):
-        col = [columns[x] for x in range(len(columns)) if not (x==0 )]             
+        col = [columns[x] for x in range(len(columns))]             
         gb = GridOptionsBuilder.from_dataframe(df[col])
         # configure selection
         gb.configure_selection(selection_mode="single", use_checkbox=False)
@@ -58,7 +58,7 @@ def edit_data(cursor, db,columns, df, label, table):
     with st.expander(label):
         with st.form(f'edit_{table}'):
             # select the columns you want the users to see
-            col = [columns[x] for x in range(len(columns)) if not (x==0 or  x==5)]
+            col = [columns[x] for x in range(len(columns)) if not (x==4)]
             gb = GridOptionsBuilder.from_dataframe(df[col])
             gb.configure_default_column(editable=True)
 
@@ -89,7 +89,7 @@ def delete_data(cursor, db,columns, df, label, table):
     with st.expander(label):
         with st.form(f'delete_{table}'):
             # select the columns you want the users to see
-            col = [columns[x] for x in range(len(columns)) if not (x==1 or x==6 or x==7)]
+            col = [columns[x] for x in range(len(columns))]
             gb = GridOptionsBuilder.from_dataframe(df[col])
             # configure selection
             gb.configure_selection(selection_mode="single", use_checkbox=False)
@@ -118,10 +118,7 @@ def sent_to_db(cursor, db, primary_table, df_ref, new_df):
     for row_index, col_name in df_changes.iterrows():
         # st.write(row_index, col_name.index.tolist())
         for col in col_name.index.tolist()[1::2]:
-            # st.write(col)
-            # st.write(col_name[col])
             if not pd.isna(col_name[col]):
-                # st.write("Sure to udpate?") 
                 data_id = new_df.iloc[row_index]['id']
 
                 if col[0] not in ['bank', 'concern', 'payto', 'payfor']:
@@ -155,17 +152,15 @@ def sent_to_delete_db(cursor, db, table_name, selected_rows):
 def select_columns(db):
     query = "SHOW COLUMNS FROM expense"
     df = pd.read_sql(query, con=db)
-    col = [df['Field'][x] for x in range(len(df['Field'])) if not (x==6 or x==7)]
-    # if 'columns' not in st.session_state:
-    #     st.session_state.columns = col
-    # st.write(col)
+    col = [df['Field'][x] for x in range(len(df['Field'])) if not (x==0 or x==6 or x==7)]
     return col
 
-def show_form(df,db):
-    column_names = select_columns(db)
-    with st.expander("Add Expance"):
-        with st.form(key='new_expense_submit_form', clear_on_submit=False, border=True):
-            for column_name in column_names:
-                # Choose appropriate input element based on column type
-                element_type = st.text_input if pd.api.types.is_string_dtype(df[column_name]) else st.number_input
-                value = element_type(column_name)
+
+def extra_field(df,db):
+    query = "SHOW COLUMNS FROM expense"
+    df = pd.read_sql(query, con=db)
+    column_names = df['Field'].tolist()
+    column_names = [column_names[x] for x in range(len(column_names)) if not (x<=7)]
+    column_types = df['Type'].to_dict()
+    column_types = [column_types[x] for x in range(len(column_types)) if not (x<=7)]
+    return column_names,column_types
